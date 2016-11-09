@@ -26,8 +26,9 @@ circle.gain{
   stroke: #fff;
 }
 circle.loss{
-  fill: #ef8a62;
-  stroke: #fff;
+  opacity: 0;
+  stroke-opacity: 0;
+  visibility: hidden;
 }
 #map circle{
   opacity: .65;

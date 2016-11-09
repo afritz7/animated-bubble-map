@@ -80,11 +80,13 @@ d3.json("json/states.json", function(error, us) {
     // get columns
     for ( var mug in first ){
       if ( mug != "CITY" && mug != "LAT" && mug != "LON" ){
+
         orderedColumns.push(mug);
       }
     }
 
     orderedColumns.sort( sortColumns );
+
 
     // draw city points 
     for ( var i in data ){
@@ -97,7 +99,9 @@ d3.json("json/states.json", function(error, us) {
         .attr("vector-effect","non-scaling-stroke")
         .on("mousemove",function(d){
           hoverData = d;
-          setProbeContent(d);
+          
+      
+          setProbeContent(d, currentFrame);
           probe
             .style( {
               "display" : "block",
@@ -111,7 +115,7 @@ d3.json("json/states.json", function(error, us) {
         })
     }
 
-    createLegend();
+    // createLegend();
 
     dateScale = createDateScale(orderedColumns).range([0,500]);
     
@@ -143,6 +147,8 @@ d3.json("json/states.json", function(error, us) {
 });
 
 function drawMonth(m,tween){
+
+
   var circle = map.selectAll("circle")
     .sort(function(a,b){
       // catch nulls, and sort circles by size (smallest on top)
@@ -151,6 +157,7 @@ function drawMonth(m,tween){
       return Math.abs(b[m]) - Math.abs(a[m]);
     })
     .attr("class",function(d){
+    
       return d[m] > 0 ? "gain" : "loss";
     })
   if ( tween ){
@@ -158,25 +165,22 @@ function drawMonth(m,tween){
       .transition()
       .ease("linear")
       .duration(frameLength)
-      .attr("r",function(d){
-        return circleSize(d[m])
-      });
+      .attr("r",10);
   } else {
-    circle.attr("r",function(d){
-      return circleSize(d[m])
-    });
+    circle.attr("r",10);
   }
 
   d3.select("#date p#month").html( monthLabel(m) );
 
   if (hoverData){
-    setProbeContent(hoverData);
+    setProbeContent(hoverData, currentFrame);
   }
 }
 
 function animate(){
   interval = setInterval( function(){
     currentFrame++;
+
 
     if ( currentFrame == orderedColumns.length ) currentFrame = 0;
 
@@ -196,6 +200,8 @@ function animate(){
   },frameLength);
 }
 
+
+
 function createSlider(){
 
   sliderScale = d3.scale.linear().domain([0,orderedColumns.length-1]);
@@ -208,6 +214,8 @@ function createSlider(){
       if ( isPlaying ){
         clearInterval(interval);
       }
+
+
       currentFrame = value;
       drawMonth( orderedColumns[value], d3.event.type != "drag" );
     })
@@ -264,37 +272,43 @@ function createSlider(){
   d3.select("#axis > g g:last-of-type text").attr("text-anchor","start").style("text-anchor","start");
 }
 
-function createLegend(){
-  var legend = g.append("g").attr("id","legend").attr("transform","translate(560,10)");
+// The legend is gone
+//function createLegend(){
+//   var legend = g.append("g").attr("id","legend").attr("transform","translate(560,10)");
 
-  legend.append("circle").attr("class","gain").attr("r",5).attr("cx",5).attr("cy",10)
-  // legend.append("circle").attr("class","loss").attr("r",5).attr("cx",5).attr("cy",30)
+//   legend.append("circle").attr("class","gain").attr("r",5).attr("cx",5).attr("cy",10)
+//   // legend.append("circle").attr("class","loss").attr("r",5).attr("cx",5).attr("cy",30)
 
-  legend.append("text").text("Duraspine Installation").attr("x",15).attr("y",13);
-  // legend.append("text").text("jobs lost").attr("x",15).attr("y",33);
+//   legend.append("text").text("Duraspine Installation").attr("x",15).attr("y",13);
+//   // legend.append("text").text("jobs lost").attr("x",15).attr("y",33);
 
-  var sizes = [ 450000, 1350000, 2250000 ];
-  for ( var i in sizes ){
-    legend.append("circle")
-      .attr( "r", circleSize( sizes[i] ) )
-      .attr( "cx", 160 + circleSize( sizes[sizes.length-1] ) )
-      .attr( "cy", 2 * circleSize( sizes[sizes.length-1] ) - circleSize( sizes[i] ) )
-      .attr("vector-effect","non-scaling-stroke");
-    legend.append("text")
-      .text( "$" + (sizes[i] / 1500) + "K" + (i == sizes.length-1 ? "" : "") )
-      .attr( "text-anchor", "middle" )
-      .attr( "x", 160 + circleSize( sizes[sizes.length-1] ) )
-      .attr( "y", 2 * ( circleSize( sizes[sizes.length-1] ) - circleSize( sizes[i] ) ) + 5 )
-      .attr( "dy", 13)
-  }
-}
+//   var sizes = [ 450000, 1350000, 2250000 ];
+//   for ( var i in sizes ){
 
-function setProbeContent(d){
+//     legend.append("circle")
+//       .attr( "r", circleSize( sizes[i] ) )
+//       .attr( "cx", 160 + circleSize( sizes[sizes.length-1] ) )
+//       .attr( "cy", 2 * circleSize( sizes[sizes.length-1] ) - circleSize( sizes[i] ) )
+//       .attr("vector-effect","non-scaling-stroke");
+//     legend.append("text")
+//       .text( "$" + (sizes[i] / 1500) + "K" + (i == sizes.length-1 ? "" : "") )
+//       .attr( "text-anchor", "middle" )
+//       .attr( "x", 160 + circleSize( sizes[sizes.length-1] ) )
+//       .attr( "y", 2 * ( circleSize( sizes[sizes.length-1] ) - circleSize( sizes[i] ) ) + 5 )
+//       .attr( "dy", 13)
+//   }
+// }
+
+ 
+
+
+function setProbeContent(d, currentFrame){
+  console.log("setProbeContent currentFrame: " + currentFrame)
   var val = d[ orderedColumns[ currentFrame ] ],
       m_y = getMonthYear( orderedColumns[ currentFrame ] ),
       month = months_full[ months.indexOf(m_y[0]) ];
-  var html = "<strong>" + d.CITY + "</strong><br/>" +
-            format (Math.abs( val ) ) + " spent " + ( val < 0 ? "lost" : "on fields" ) + "<br/>" +
+  var html = "<strong>" + d.CITY + "</strong><br/>$" +
+            format (Math.abs( val ) ) + " spent on fields<br/>" +
             "<span>" + month + " " + m_y[1] + "</span>";
   probe
     .html( html );
